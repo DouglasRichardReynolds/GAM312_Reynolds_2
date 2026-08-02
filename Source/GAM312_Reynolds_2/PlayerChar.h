@@ -5,6 +5,8 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "Camera/CameraComponent.h"
+#include "Resource_M.h"
+#include "Kismet/GameplayStatics.h"
 #include "PlayerChar.generated.h"
 
 UCLASS()
@@ -27,6 +29,8 @@ public:
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
+
+	// Assigning PlayerChar Functions for Unreal to use
 	UFUNCTION()
 		void MoveForward(float axisValue);
 
@@ -44,4 +48,53 @@ public:
 
 	UPROPERTY(VisibleAnywhere)
 		UCameraComponent* PlayerCamComp;
+
+	// Assigning PlayerChar Stats
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Player Stats")
+		float Health = 100.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Player Stats")
+		float Hunger = 100.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Player Stats")
+		float Stamina = 100.0f;
+		
+	// Assigning Resources
+	UPROPERTY(EditAnywhere, Category = "Resources")
+		int Wood;
+
+	UPROPERTY(EditAnywhere, Category = "Resources")
+		int Stone;
+
+	UPROPERTY(EditAnywhere, Category = "Resources")
+		int Berry;
+
+	// Assigning Resources Amount array
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Resources")
+		TArray<int> ResourcesArray;
+
+	// Assigning Resource Name array
+	UPROPERTY(EditAnywhere, Category = "Resources")
+		TArray<FString> ResourcesNameArray;
+
+	// Assigning Hit Marker
+	UPROPERTY(EditAnywhere, Category = "HitMarker")
+		UMaterialInterface* hitDecal;
+
+	// Assigning Functions that interact with PlayerChar stats
+	UFUNCTION(BlueprintCallable)
+		void SetHealth(float amount);
+
+	UFUNCTION(BlueprintCallable)
+		void SetHunger(float amount);
+
+	UFUNCTION(BlueprintCallable)
+		void SetStamina(float amount);
+
+	UFUNCTION(BlueprintCallable)
+		void DecreaseStats();
+
+	// Assigning resource collection function
+	UFUNCTION()
+		void GiveResource(float amount, FString resourceType);
 };
