@@ -42,6 +42,10 @@ void APlayerChar::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	// Updating stats every tick - Made values percentages
+	PlayerUI->UpdateBars(Health, Hunger, Stamina);
+
+
 	// Setting up building part placement
 	if (isBuilding)
 	{
@@ -227,7 +231,7 @@ void APlayerChar::UpdateResources(float woodAmount, float stoneAmount, FString b
 	// Subtracting resources to build objects
 	if (woodAmount <= ResourcesArray[0])
 	{
-		if (Stone <= ResourcesArray[1])
+		if (stoneAmount <= ResourcesArray[1])
 		{
 			ResourcesArray[0] = ResourcesArray[0] - woodAmount;
 			ResourcesArray[1] = ResourcesArray[1] - stoneAmount;
@@ -276,6 +280,10 @@ void APlayerChar::SpawnBuilding(int buildingID, bool& isSuccess)
 // Rotates building placement
 void APlayerChar::RotateBuilding()
 {
-	spawnedPart->AddActorWorldRotation(FRotator(0, 90, 0));
+	// Fixed crashing
+	if (IsValid(spawnedPart))
+	{
+		spawnedPart->AddActorWorldRotation(FRotator(0.0f, 90.0f, 0.0f));
+	}
 }
 
