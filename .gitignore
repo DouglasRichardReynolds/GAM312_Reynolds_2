@@ -148,3 +148,17 @@ Desktop.ini
 *.temp
 *.bak
 *.swp
+
+# Unreal Engine packaged builds
+/Windows/
+/WindowsNoEditor/
+/Linux/
+/Mac/
+/StagedBuilds/
+
+# Unreal Engine generated files
+/Binaries/
+/Intermediate/
+/Saved/
+/DerivedDataCache/
+/.vs/
