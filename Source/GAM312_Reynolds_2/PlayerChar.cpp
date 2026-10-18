@@ -156,7 +156,6 @@ void APlayerChar::FindObject()
 						objWidget->UpdatematOBJ(matsCollected);
 
 						check(GEngine != nullptr);
-						GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, TEXT("Resource Collected"));
 
 						// Creating hit marker
 						UGameplayStatics::SpawnDecalAtLocation(GetWorld(), hitDecal, FVector(10.0f, 10.0f, 10.0f), HitResult.Location, FRotator(-90, 0, 0), 2.0f);
@@ -168,7 +167,6 @@ void APlayerChar::FindObject()
 					{
 						HitResource->Destroy();
 						check(GEngine != nullptr);
-						GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, TEXT("Resource Destroyed"));
 					}
 				}
 
