@@ -297,10 +297,11 @@ void APlayerChar::SpawnBuilding(int buildingID, bool& isSuccess)
 // Rotates building placement
 void APlayerChar::RotateBuilding()
 {
-	// Fixed crashing
-	if (IsValid(spawnedPart))
+	// Only rotate the building while it is being placed.
+	if (isBuilding && IsValid(spawnedPart))
 	{
-		spawnedPart->AddActorWorldRotation(FRotator(0.0f, 90.0f, 0.0f));
+		spawnedPart->AddActorWorldRotation(
+			FRotator(0.0f, 90.0f, 0.0f)
+		);
 	}
 }
-
