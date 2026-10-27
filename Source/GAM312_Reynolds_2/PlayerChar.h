@@ -139,4 +139,48 @@ public:
 
 	UFUNCTION()
 		void RotateBuilding();
+	// Opening gameplay variables to Unreal Engine
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Interaction", meta = (ClampMin = "0.0"))
+		float ResourceStaminaCost = 5.0f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Interaction", meta = (ClampMin = "0.0"))
+		float InteractionDistance = 800.0f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Building", meta = (ClampMin = "0.0"))
+		float BuildingPlacementDistance = 400.0f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Building", meta = (ClampMin = "0.0"))
+		float BuildingRotationAngle = 90.0f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Player Stats", meta = (ClampMin = "0.0"))
+		float MaximumHealthValue = 100.0f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Player Stats", meta = (ClampMin = "0.0"))
+		float MaximumHungerValue = 100.0f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Player Stats", meta = (ClampMin = "0.0"))
+		float MaximumStaminaValue = 100.0f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Player Stats", meta = (ClampMin = "0.0"))
+		float StatsUpdateInterval = 2.0f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Player Stats", meta = (ClampMin = "0.0"))
+		float HungerDecayAmount = 1.0f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Player Stats", meta = (ClampMin = "0.0"))
+		float StaminaRegenerationAmount = 10.0f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Player Stats", meta = (ClampMin = "0.0"))
+		float StarvationDamage = 3.0f;
+
+	// Opening decal variables to Unreal Engine
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Interaction")
+		FVector HitDecalSize = FVector(10.0f, 10.0f, 10.0f);
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Resource Collection|Decal")
+		FRotator HitDecalRotation = FRotator(-90.0f, 0.0f, 0.0f);
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Interaction", meta = (ClampMin = "0.0"))
+		float HitDecalLifetime = 2.0f;
+
 };

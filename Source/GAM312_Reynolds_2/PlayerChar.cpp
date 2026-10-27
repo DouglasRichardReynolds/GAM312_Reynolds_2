@@ -33,7 +33,7 @@ void APlayerChar::BeginPlay()
 	
 	// Setting up Stats timer and connecting DecreaseStats function
 	FTimerHandle StatsTimerHandle;
-	GetWorld()->GetTimerManager().SetTimer(StatsTimerHandle, this, &APlayerChar::DecreaseStats, 2.0f, true);
+	GetWorld()->GetTimerManager().SetTimer(StatsTimerHandle, this, &APlayerChar::DecreaseStats, StatsUpdateInterval, true);
 
 	// If Object Widget is valid
 	if (objWidget)
@@ -116,110 +116,118 @@ void APlayerChar::StopJump()
 // Definining line trace for object interaction
 void APlayerChar::FindObject()
 {
-	FHitResult HitResult;
-	FVector StartLocation = PlayerCamComp->GetComponentLocation();
-	FVector Direction = PlayerCamComp->GetForwardVector() * 800.0f;
-	FVector EndLocation = StartLocation + Direction;
-
-	FCollisionQueryParams QueryParams;
-	QueryParams.AddIgnoredActor(this);
-	QueryParams.bTraceComplex = true;
-	QueryParams.bReturnFaceIndex = true;
-
-	// If we're not building, then trace
-	if (!isBuilding)
-	{
-		if (GetWorld()->LineTraceSingleByChannel(HitResult, StartLocation, EndLocation, ECC_Visibility, QueryParams))
-		{
-			AResource_M* HitResource = Cast<AResource_M>(HitResult.GetActor());
-
-			// We have stamina
-			if (Stamina > 5)
-			{
-				// Resource was hit
-				if (HitResource)
-				{
-					FString hitName = HitResource->resourceName;
-					int resourceValue = HitResource->resourceAmount;
-
-					HitResource->totalResources = HitResource->totalResources - resourceValue;
-
-					// Resource is not empty
-					if (HitResource->totalResources > resourceValue)
-					{
-						GiveResource(resourceValue, hitName);
-
-						// Incrementing materials collected variable
-						matsCollected = matsCollected + resourceValue;
-
-						// Updating objective
-						objWidget->UpdatematOBJ(matsCollected);
-
-						check(GEngine != nullptr);
-
-						// Creating hit marker
-						UGameplayStatics::SpawnDecalAtLocation(GetWorld(), hitDecal, FVector(10.0f, 10.0f, 10.0f), HitResult.Location, FRotator(-90, 0, 0), 2.0f);
-
-						// Reducing stamina
-						SetStamina(-5.0f);
-					}
-					else
-					{
-						HitResource->Destroy();
-						check(GEngine != nullptr);
-					}
-				}
-
-			}
-		}
-	}
-	else
+	// Complete building placement before checking resources
+	if (isBuilding)
 	{
 		isBuilding = false;
 
-		// Incrementing number of built objects, then updating
-		objectsBuilt = objectsBuilt + 1.0f;
-		objWidget->UpdatebuildObj(objectsBuilt);
+		objectsBuilt += 1.0f;
+
+		if (IsValid(objWidget))
+		{
+			objWidget->UpdatebuildObj(objectsBuilt);
+		}
+
+		return;
 	}
+
+	// Do not trace if the player lacks the required stamina
+	if (Stamina <= ResourceStaminaCost)
+	{
+		return;
+	}
+
+	// Defining how far away a player can collect resources
+	const FVector StartLocation = PlayerCamComp->GetComponentLocation();
+	const FVector EndLocation = StartLocation + PlayerCamComp->GetForwardVector() * InteractionDistance;
+
+	// Create collision settings
+	FCollisionQueryParams QueryParams;
+
+	// Ignore the player
+	QueryParams.AddIgnoredActor(this);
+
+	// Use complex collision to provide more precise hit detection
+	QueryParams.bTraceComplex = true;
+
+	FHitResult HitResult;
+
+	// Check whether the player is looking at a resource
+	if (!GetWorld()->LineTraceSingleByChannel(HitResult, StartLocation, EndLocation, ECC_Visibility, QueryParams))
+	{
+		return;
+	}
+
+	AResource_M* HitResource = Cast<AResource_M>(HitResult.GetActor());
+
+	if (!IsValid(HitResource))
+	{
+		return;
+	}
+
+	const FString ResourceName = HitResource->resourceName;
+	const int32 ResourceValue = HitResource->resourceAmount;
+
+	HitResource->totalResources -= ResourceValue;
+
+	// Remove the resource actor when depleted
+	if (HitResource->totalResources <= ResourceValue)
+	{
+		HitResource->Destroy();
+		return;
+	}
+
+	// Add the collected resource to the player's inventory
+	GiveResource(ResourceValue, ResourceName);
+
+	matsCollected += ResourceValue;
+
+	if (IsValid(objWidget))
+	{
+		objWidget->UpdatematOBJ(matsCollected);
+	}
+
+	// Spawn the resource hit decal using configurable settings.
+	if (hitDecal)
+	{
+		UGameplayStatics::SpawnDecalAtLocation(GetWorld(), hitDecal, HitDecalSize, HitResult.Location, HitDecalRotation, HitDecalLifetime);
+	}
+
+	// Apply the configurable stamina cost
+	SetStamina(-ResourceStaminaCost);
 }
 
 // Defining stat functions
 void APlayerChar::SetHealth(float amount)
 {
-	if (Health + amount < 100)
-	{
-		Health = Health + amount;
-	}
+	// Allows player to heal up to, but not past max health
+	Health = FMath::Clamp(Health + amount, 0.0f, MaximumHealthValue);
 }
 
 void APlayerChar::SetHunger(float amount)
 {
-	if (Hunger + amount < 100)
-	{
-		Hunger = Hunger + amount;
-	}
+	// Allows player to recover hunger up to, but not past max hunger
+	Hunger = FMath::Clamp(Hunger + amount, 0.0f, MaximumHungerValue);
 }
 
 void APlayerChar::SetStamina(float amount)
 {
-	if (Stamina + amount < 100)
-	{
-		Stamina = Stamina + amount;
-	}
+	// Allows player to recover stamina up to, but not past max stamina
+	Stamina = FMath::Clamp(Stamina + amount, 0.0f, MaximumStaminaValue);
 }
 
 void APlayerChar::DecreaseStats()
 {
-	if (Hunger > 0)
+	if (Hunger > 0.0f)
 	{
-		SetHunger(-1.0f);
+		SetHunger(-HungerDecayAmount);
 	}
-	
-	SetStamina(10.0f);
 
-	if (Hunger <= 0)
+	SetStamina(StaminaRegenerationAmount);
+
+	if (Hunger <= 0.0f)
 	{
-		SetHealth(-3.0f);
+		SetHealth(-StarvationDamage);
 	}
 }
 
@@ -277,10 +285,15 @@ void APlayerChar::SpawnBuilding(int buildingID, bool& isSuccess)
 		{
 			// Starting to build, spawns object
 			isBuilding = true;
+
 			FActorSpawnParameters SpawnParams;
+
 			FVector StartLocation = PlayerCamComp->GetComponentLocation();
-			FVector Direction = PlayerCamComp->GetForwardVector() * 400.0f;
+
+			const FVector Direction = PlayerCamComp->GetForwardVector() * BuildingPlacementDistance;
+
 			FVector EndLocation = StartLocation + Direction;
+
 			FRotator myRot(0, 0, 0);
 
 			BuildingArray[buildingID] = BuildingArray[buildingID] - 1;
@@ -297,11 +310,9 @@ void APlayerChar::SpawnBuilding(int buildingID, bool& isSuccess)
 // Rotates building placement
 void APlayerChar::RotateBuilding()
 {
-	// Only rotate the building while it is being placed.
+	// Only rotate the building while it is being placed
 	if (isBuilding && IsValid(spawnedPart))
 	{
-		spawnedPart->AddActorWorldRotation(
-			FRotator(0.0f, 90.0f, 0.0f)
-		);
+		spawnedPart->AddActorWorldRotation(FRotator(0.0f, BuildingRotationAngle, 0.0f));
 	}
 }
